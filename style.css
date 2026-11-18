@@ -6,3 +6,4 @@
 @media(max-width:390px){.nav .brand{font-size:18px;gap:7px;white-space:nowrap}.nav .ball{width:24px;height:24px}.report{font-size:12px;padding:7px 10px;white-space:nowrap}.report b{margin-left:4px}}
 @media(hover:hover) and (pointer:fine){.hero-console .balls button:hover,.broadcast .balls button:hover{transform:translateY(-2px);border-color:var(--pink)}}
 @media(prefers-reduced-motion:reduce){.report:hover,.cta:hover,.balls button:hover{transform:none!important}}
+#band-controls{width:fit-content;max-width:100%;flex-wrap:wrap;margin:18px 0 8px;border-color:#ae919e}#band-controls button{font-size:13px;padding:8px 14px}@media(max-width:440px){#band-controls button{padding:7px 8px;font-size:12px}}

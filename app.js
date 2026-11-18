@@ -16,12 +16,37 @@ function rankings() {
     <p class="profiletext">${player.rr_use}</p><div class="meta">${player.balls} pressure balls · ${player.matches} matches · Tier ${player.tier_num}${player.one?' · One-season evidence':''}</div>
     <details><summary>Read this estimate</summary><p>Four in five estimates exceed the floor. Zero means level with matched peers. “Above par” means the entire 90% interval is positive. Top-ten chance counts how often the player placed in the ten across model draws.</p></details>`;
 }
+let arenaSide='Batting';
+const definitions={
+  Batting: [['60','Crunch ≥60'],['50','Squeeze ≥50']],
+  Bowling: [['50','Squeeze ≥50'],['55','Pressure ≥55'],['D','Gradual weighting']]
+};
+function chooseArena(discipline) {
+  arenaSide=discipline;
+  document.querySelectorAll('[data-arena-side]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.arenaSide===discipline));
+  $('#band-controls').innerHTML=definitions[discipline].map(([key,label])=>`<button data-band="${key}">${label}</button>`).join('');
+  showBand(definitions[discipline][0][0]);
+}
 function showBand(band) {
   document.querySelectorAll('[data-band]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.band===band));
-  const crunch=atlas.cards.filter(p=>p.side==='Batting');
-  const list=band==='60'?crunch:atlas.squeeze;
-  const other=new Set((band==='60'?atlas.squeeze:crunch).map(x=>x.player_name));
-  $('#bandlist').innerHTML=list.map((p,i)=>`<div class="bandrow"><span class="ranknum">${String(i+1).padStart(2,'0')}</span><strong>${p.player_name}</strong>${other.has(p.player_name)?'<small>Both tens</small>':''}<span>Floor ${fmt(p.floor)}</span></div>`).join('');
+  const primary=atlas.cards.filter(p=>p.side===arenaSide);
+  let list=primary, comparison=[], badge='', note='';
+  if(arenaSide==='Batting'){
+    if(band==='50') list=atlas.squeeze;
+    comparison=band==='60'?atlas.squeeze:primary;
+    badge='Both tens';
+    note='Only one batter makes both tens. Switch the cutoff to see how the definition changes the answer.';
+  }else if(band==='50'){
+    note='Primary bowling ten. Four of these ten remain at ≥55, and four remain with gradual weighting. No tested definition showed persistent bowling impact.';
+  }else{
+    list=atlas.bowlingVariants[band==='55'?'B':'D'];
+    comparison=primary;
+    badge='Also in ≥50 ten';
+    note=band==='55'?'Four of these ten also appear in the primary ≥50 ten. This cutoff counts only balls at pressure 55 or higher.':'Four of these ten also appear in the primary ≥50 ten. A ball carries zero weight at 40 or below, increasing evenly to full weight at 70 or above.';
+  }
+  $('#band-summary').textContent=note;
+  const other=new Set(comparison.map(p=>p.player_name));
+  $('#bandlist').innerHTML=list.map((p,i)=>`<div class="bandrow"><span class="ranknum">${String(i+1).padStart(2,'0')}</span><strong>${p.player_name}</strong>${other.has(p.player_name)?'<small>'+badge+'</small>':''}<span>Floor ${fmt(p.floor)}</span></div>`).join('');
 }
 function hero() {
   const state=overState(atlas.overs[0],heroDelivery);
@@ -45,12 +70,13 @@ function replay() {
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
-  if(b.dataset.side){side=b.dataset.side;selected=0;rankings()}
+  if(b.dataset.side){side=b.dataset.side;selected=0;rankings();chooseArena(side)}
   else if(b.dataset.index!==undefined){
     selected=Number(b.dataset.index);rankings();
     if(matchMedia('(max-width:760px)').matches)$('#profile').focus();
     else document.querySelector('[data-index="'+selected+'"]').focus({preventScroll:true});
-  }else if(b.dataset.band){showBand(b.dataset.band)}
+  }else if(b.dataset.arenaSide){chooseArena(b.dataset.arenaSide)}
+  else if(b.dataset.band){showBand(b.dataset.band)}
   else if(b.dataset.hero){heroDelivery=Number(b.dataset.hero);hero();document.querySelector('[data-hero="'+heroDelivery+'"]').focus({preventScroll:true})}
   else if(b.dataset.match!==undefined){stop();match=Number(b.dataset.match);delivery=0;replay();document.querySelector('[data-match="'+match+'"]').focus({preventScroll:true})}
   else if(b.dataset.ball){stop();delivery=Number(b.dataset.ball);replay();document.querySelector('[data-ball="'+delivery+'"]').focus({preventScroll:true})}
@@ -65,4 +91,4 @@ $('#play').addEventListener('click',()=>{
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 $('#openReplay').addEventListener('click',()=>{stop();match=0;delivery=heroDelivery;replay()});
 $('#scope').innerHTML=atlas.scope.slice().sort((a,b)=>a.percent-b.percent).map(x=>`<div class="barline"><span>${x.bat_role}</span><i style="width:${x.percent}%"></i><b>${x.percent.toFixed(1)}%</b></div>`).join('');
-rankings();showBand('60');hero();replay();bindMotion();
+rankings();chooseArena('Batting');hero();replay();bindMotion();
