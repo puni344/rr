@@ -15,7 +15,7 @@ def encoded(name):
 def build(destination):
     html = source("index.html")
     css = source("style.css").replace("url(stadium.jpg)", "url(data:image/jpeg;base64," + encoded("stadium.jpg") + ")")
-    html = html.replace('<link rel="stylesheet" href="style.css">', "<style>" + css + "</style>")
+    html = re.sub(r'<link rel="stylesheet" href="style\.css(?:\?[^"]*)?">', lambda _: "<style>" + css + "</style>", html)
     html = re.sub(r'<script src="[^"]+" defer></script>', "", html)
     scripts = "\n".join(source(name) for name in ("data.js", "instruments.js", "app.js"))
     # Both report links reuse a single embedded copy. Decode only on reader request.
