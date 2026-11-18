@@ -91,4 +91,5 @@ $('#play').addEventListener('click',()=>{
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 $('#openReplay').addEventListener('click',()=>{stop();match=0;delivery=heroDelivery;replay()});
 $('#scope').innerHTML=atlas.scope.slice().sort((a,b)=>a.percent-b.percent).map(x=>`<div class="barline"><span>${x.bat_role}</span><i style="width:${x.percent}%"></i><b>${x.percent.toFixed(1)}%</b></div>`).join('');
-rankings();chooseArena('Batting');hero();replay();bindMotion();
+const startingSide=new URLSearchParams(location.search).get('view')==='bowling'?'Bowling':'Batting';
+side=startingSide;rankings();chooseArena(startingSide);hero();replay();bindMotion();
